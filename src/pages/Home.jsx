@@ -3,7 +3,7 @@ import { DragDropContext } from '@hello-pangea/dnd';
 import Navbar from '../components/Navbar';
 import Column from '../components/Column';
 import { useTask } from '../context/TaskContext';
-import { FaPlus, FaFilter, FaChartBar } from 'react-icons/fa';
+import { FaPlus, FaFilter, FaChartBar, FaTimes } from 'react-icons/fa';
 import Statistics from '../components/Statistics';
 
 const Home = ({ darkMode, toggleDarkMode }) => {
@@ -73,52 +73,65 @@ const Home = ({ darkMode, toggleDarkMode }) => {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
-                <div className="text-2xl text-gray-600 dark:text-gray-400">Loading tasks...</div>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
+                <div className="text-center">
+                    <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mb-4"></div>
+                    <div className="text-2xl font-semibold text-gray-700 dark:text-gray-300">Loading your tasks...</div>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
             <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
 
             <div className="max-w-7xl mx-auto px-4 py-6">
                 {/* Header Controls */}
-                <div className="mb-6 flex flex-wrap gap-4 items-center justify-between">
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setShowAddTask(true)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition"
-                        >
-                            <FaPlus /> <span>Add Task</span>
-                        </button>
+                <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
+                    <div className="flex flex-wrap gap-4 items-center justify-between">
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => setShowAddTask(true)}
+                                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-md"
+                            >
+                                <FaPlus /> <span className="font-semibold">New Task</span>
+                            </button>
 
-                        <button
-                            onClick={() => setShowStats(!showStats)}
-                            className="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition"
-                        >
-                            <FaChartBar /> <span>Statistics</span>
-                        </button>
-                    </div>
+                            <button
+                                onClick={() => setShowStats(!showStats)}
+                                className={`${showStats
+                                        ? 'bg-gradient-to-r from-purple-500 to-purple-600'
+                                        : 'bg-gradient-to-r from-purple-400 to-purple-500'
+                                    } hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-md`}
+                            >
+                                <FaChartBar /> <span className="font-semibold">Statistics</span>
+                            </button>
+                        </div>
 
-                    <div className="flex gap-2 flex-wrap">
-                        <input
-                            type="text"
-                            placeholder="Search tasks..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
-                        />
+                        <div className="flex gap-2 flex-wrap">
+                            <div className="relative">
+                                <input
+                                    type="text"
+                                    placeholder="Search tasks..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="px-4 py-3 pl-10 border-2 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition w-64"
+                                />
+                                <svg className="w-5 h-5 absolute left-3 top-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
 
-                        <select
-                            value={filterStatus}
-                            onChange={(e) => setFilterStatus(e.target.value)}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-800 dark:text-white"
-                        >
-                            <option value="all">All Tasks</option>
-                            <option value="overdue">Overdue</option>
-                        </select>
+                            <select
+                                value={filterStatus}
+                                onChange={(e) => setFilterStatus(e.target.value)}
+                                className="px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                            >
+                                <option value="all">All Tasks</option>
+                                <option value="overdue">Overdue Only</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
@@ -127,57 +140,89 @@ const Home = ({ darkMode, toggleDarkMode }) => {
 
                 {/* Add Task Modal */}
                 {showAddTask && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                        <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
-                            <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-white">
-                                Add New Task
-                            </h2>
-                            <form onSubmit={handleAddTask} className="space-y-4">
-                                <input
-                                    type="text"
-                                    placeholder="Task title"
-                                    value={newTask.title}
-                                    onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                                    required
-                                />
-
-                                <textarea
-                                    placeholder="Description (optional)"
-                                    value={newTask.description}
-                                    onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                                    rows="3"
-                                />
-
-                                <select
-                                    value={newTask.priority}
-                                    onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
+                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full shadow-2xl transform transition-all animate-fadeIn">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-3xl font-bold text-gray-800 dark:text-white flex items-center">
+                                    <div className="bg-blue-100 dark:bg-blue-900 rounded-lg p-2 mr-3">
+                                        <FaPlus className="text-blue-600 dark:text-blue-300" />
+                                    </div>
+                                    Add New Task
+                                </h2>
+                                <button
+                                    onClick={() => setShowAddTask(false)}
+                                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"
                                 >
-                                    <option value="low">Low Priority</option>
-                                    <option value="medium">Medium Priority</option>
-                                    <option value="high">High Priority</option>
-                                </select>
+                                    <FaTimes className="text-2xl" />
+                                </button>
+                            </div>
 
-                                <input
-                                    type="date"
-                                    value={newTask.deadline}
-                                    onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
-                                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white"
-                                />
+                            <form onSubmit={handleAddTask} className="space-y-5">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                        Task Title *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        placeholder="Enter task title..."
+                                        value={newTask.title}
+                                        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                        required
+                                    />
+                                </div>
 
-                                <div className="flex space-x-2">
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                        Description
+                                    </label>
+                                    <textarea
+                                        placeholder="Add more details..."
+                                        value={newTask.description}
+                                        onChange={(e) => setNewTask({ ...newTask, description: e.target.value })}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
+                                        rows="3"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                        Priority Level
+                                    </label>
+                                    <select
+                                        value={newTask.priority}
+                                        onChange={(e) => setNewTask({ ...newTask, priority: e.target.value })}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                    >
+                                        <option value="low">🟢 Low Priority</option>
+                                        <option value="medium">🟡 Medium Priority</option>
+                                        <option value="high">🔴 High Priority</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                        Deadline (Optional)
+                                    </label>
+                                    <input
+                                        type="date"
+                                        value={newTask.deadline}
+                                        onChange={(e) => setNewTask({ ...newTask, deadline: e.target.value })}
+                                        className="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                    />
+                                </div>
+
+                                <div className="flex space-x-3 pt-2">
                                     <button
                                         type="submit"
-                                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg"
+                                        className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition transform hover:scale-105 shadow-lg"
                                     >
-                                        Add Task
+                                        Create Task
                                     </button>
                                     <button
                                         type="button"
                                         onClick={() => setShowAddTask(false)}
-                                        className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
+                                        className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold transition"
                                     >
                                         Cancel
                                     </button>
@@ -189,33 +234,50 @@ const Home = ({ darkMode, toggleDarkMode }) => {
 
                 {/* Kanban Board */}
                 <DragDropContext onDragEnd={handleDragEnd}>
-                    <div className="flex gap-4 overflow-x-auto pb-4">
+                    <div className="flex gap-6 overflow-x-auto pb-4">
                         <Column
                             columnId="todo"
-                            title="To Do"
+                            title="📋 To Do"
                             tasks={getFilteredTasks('todo')}
                             onDelete={deleteTask}
                             onEdit={updateTask}
-                            color="bg-red-500"
+                            color="bg-gradient-to-r from-red-500 to-red-600"
                         />
                         <Column
                             columnId="inprogress"
-                            title="In Progress"
+                            title="⚡ In Progress"
                             tasks={getFilteredTasks('inprogress')}
                             onDelete={deleteTask}
                             onEdit={updateTask}
-                            color="bg-yellow-500"
+                            color="bg-gradient-to-r from-yellow-500 to-yellow-600"
                         />
                         <Column
                             columnId="done"
-                            title="Done"
+                            title="✅ Done"
                             tasks={getFilteredTasks('done')}
                             onDelete={deleteTask}
                             onEdit={updateTask}
-                            color="bg-green-500"
+                            color="bg-gradient-to-r from-green-500 to-green-600"
                         />
                     </div>
                 </DragDropContext>
+
+                {/* Empty State */}
+                {tasks.length === 0 && (
+                    <div className="text-center py-20">
+                        <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-100 dark:bg-blue-900 rounded-full mb-6">
+                            <FaPlus className="text-5xl text-blue-500 dark:text-blue-300" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-700 dark:text-gray-300 mb-2">No tasks yet!</h3>
+                        <p className="text-gray-500 dark:text-gray-400 mb-6">Create your first task to get started</p>
+                        <button
+                            onClick={() => setShowAddTask(true)}
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-lg font-semibold transition transform hover:scale-105 shadow-lg"
+                        >
+                            Create Your First Task
+                        </button>
+                    </div>
+                )}
             </div>
         </div>
     );
