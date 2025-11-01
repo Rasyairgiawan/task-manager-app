@@ -1,12 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { TaskProvider } from './context/TaskContext';
-import ProtectedRoute from "./components/ProtectedRoute";
+import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Home from './pages/Home';
 import { useState, useEffect } from 'react';
-import DebugAuth from './DebugAuth';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -14,22 +13,21 @@ function App() {
   useEffect(() => {
     const isDark = localStorage.getItem('darkMode') === 'true';
     setDarkMode(isDark);
-    document.documentElement.classList.toggle('dark', isDark);
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+    }
   }, []);
 
   const toggleDarkMode = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem('darkMode', newMode);
-    document.documentElement.classList.toggle('dark', newMode);
+    setDarkMode(!darkMode);
+    localStorage.setItem('darkMode', !darkMode);
+    document.documentElement.classList.toggle('dark');
   };
 
   return (
     <Router>
       <AuthProvider>
         <TaskProvider>
-          {/* Debug sementara */}
-          <DebugAuth />
           <div className={darkMode ? 'dark' : ''}>
             <Routes>
               <Route path="/login" element={<Login />} />
