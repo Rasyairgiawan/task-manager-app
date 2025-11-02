@@ -203,7 +203,7 @@ const Login = () => {
                     </div>
 
                     <p className="text-center text-white text-sm mt-8">
-                        © 2024 Task Manager Pro. All rights reserved.
+                        © 2025 Moch Rasya Irgiawan. All rights reserved.
                     </p>
                 </div>
             </div>
