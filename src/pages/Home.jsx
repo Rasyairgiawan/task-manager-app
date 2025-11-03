@@ -3,15 +3,20 @@ import { DragDropContext } from '@hello-pangea/dnd';
 import Navbar from '../components/Navbar';
 import Column from '../components/Column';
 import { useTask } from '../context/TaskContext';
-import { FaPlus, FaFilter, FaChartBar, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaChartBar, FaTimes, FaTrashAlt, FaCheckSquare } from 'react-icons/fa';
 import Statistics from '../components/Statistics';
 
 const Home = ({ darkMode, toggleDarkMode }) => {
-    const { tasks, loading, addTask, deleteTask, updateTask, updateTaskStatus } = useTask();
+    const { tasks, loading, addTask, deleteTask, updateTask, updateTaskStatus, bulkDeleteTasks } = useTask();
     const [showAddTask, setShowAddTask] = useState(false);
     const [showStats, setShowStats] = useState(false);
     const [filterStatus, setFilterStatus] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
+
+    // ✅ NEW: Bulk Delete States
+    const [selectionMode, setSelectionMode] = useState(false);
+    const [selectedTasks, setSelectedTasks] = useState([]);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     // Form state
     const [newTask, setNewTask] = useState({
@@ -71,6 +76,55 @@ const Home = ({ darkMode, toggleDarkMode }) => {
         return filtered;
     };
 
+    // ✅ NEW: Toggle Selection Mode
+    const toggleSelectionMode = () => {
+        setSelectionMode(!selectionMode);
+        setSelectedTasks([]);
+    };
+
+    // ✅ NEW: Toggle Task Selection
+    const toggleTaskSelection = (taskId) => {
+        setSelectedTasks(prev => {
+            if (prev.includes(taskId)) {
+                return prev.filter(id => id !== taskId);
+            } else {
+                return [...prev, taskId];
+            }
+        });
+    };
+
+    // ✅ NEW: Select All Tasks
+    const selectAllTasks = () => {
+        if (selectedTasks.length === tasks.length) {
+            setSelectedTasks([]);
+        } else {
+            setSelectedTasks(tasks.map(task => task.id));
+        }
+    };
+
+    // ✅ NEW: Handle Bulk Delete
+    const handleBulkDelete = async () => {
+        if (selectedTasks.length === 0) return;
+
+        const confirmDelete = window.confirm(
+            `Are you sure you want to delete ${selectedTasks.length} task${selectedTasks.length > 1 ? 's' : ''}?`
+        );
+
+        if (!confirmDelete) return;
+
+        try {
+            setIsDeleting(true);
+            await bulkDeleteTasks(selectedTasks);
+            setSelectedTasks([]);
+            setSelectionMode(false);
+        } catch (error) {
+            console.error('Error bulk deleting tasks:', error);
+            alert('Failed to delete tasks. Please try again.');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
@@ -90,10 +144,11 @@ const Home = ({ darkMode, toggleDarkMode }) => {
                 {/* Header Controls */}
                 <div className="mb-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4">
                     <div className="flex flex-wrap gap-4 items-center justify-between">
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                             <button
                                 onClick={() => setShowAddTask(true)}
-                                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-md"
+                                className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={selectionMode}
                             >
                                 <FaPlus /> <span className="font-semibold">New Task</span>
                             </button>
@@ -101,12 +156,51 @@ const Home = ({ darkMode, toggleDarkMode }) => {
                             <button
                                 onClick={() => setShowStats(!showStats)}
                                 className={`${showStats
-                                        ? 'bg-gradient-to-r from-purple-500 to-purple-600'
-                                        : 'bg-gradient-to-r from-purple-400 to-purple-500'
-                                    } hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-md`}
+                                    ? 'bg-gradient-to-r from-purple-500 to-purple-600'
+                                    : 'bg-gradient-to-r from-purple-400 to-purple-500'
+                                    } hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed`}
+                                disabled={selectionMode}
                             >
                                 <FaChartBar /> <span className="font-semibold">Statistics</span>
                             </button>
+
+                            {/* ✅ NEW: Selection Mode Toggle */}
+                            <button
+                                onClick={toggleSelectionMode}
+                                className={`${selectionMode
+                                    ? 'bg-gradient-to-r from-orange-500 to-orange-600'
+                                    : 'bg-gradient-to-r from-gray-500 to-gray-600'
+                                    } hover:from-orange-600 hover:to-orange-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-md`}
+                            >
+                                {selectionMode ? <FaTimes /> : <FaCheckSquare />}
+                                <span className="font-semibold">{selectionMode ? 'Cancel Selection' : 'Select Tasks'}</span>
+                            </button>
+
+                            {/* ✅ NEW: Bulk Action Buttons (Only visible in selection mode) */}
+                            {selectionMode && (
+                                <>
+                                    <button
+                                        onClick={selectAllTasks}
+                                        className="bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-md"
+                                    >
+                                        <FaCheckSquare />
+                                        <span className="font-semibold">
+                                            {selectedTasks.length === tasks.length ? 'Deselect All' : 'Select All'}
+                                        </span>
+                                    </button>
+
+                                    <button
+                                        onClick={handleBulkDelete}
+                                        disabled={selectedTasks.length === 0 || isDeleting}
+                                        className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition transform hover:scale-105 shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <FaTrashAlt />
+                                        <span className="font-semibold">
+                                            {isDeleting ? 'Deleting...' : `Delete Selected (${selectedTasks.length})`}
+                                        </span>
+                                    </button>
+                                </>
+                            )}
                         </div>
 
                         <div className="flex gap-2 flex-wrap">
@@ -117,6 +211,7 @@ const Home = ({ darkMode, toggleDarkMode }) => {
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="px-4 py-3 pl-10 border-2 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition w-64"
+                                    disabled={selectionMode}
                                 />
                                 <svg className="w-5 h-5 absolute left-3 top-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -126,13 +221,23 @@ const Home = ({ darkMode, toggleDarkMode }) => {
                             <select
                                 value={filterStatus}
                                 onChange={(e) => setFilterStatus(e.target.value)}
-                                className="px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                                className="px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent transition disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={selectionMode}
                             >
                                 <option value="all">All Tasks</option>
                                 <option value="overdue">Overdue Only</option>
                             </select>
                         </div>
                     </div>
+
+                    {/* ✅ NEW: Selection Info Banner */}
+                    {selectionMode && (
+                        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-500 rounded">
+                            <p className="text-blue-700 dark:text-blue-200 font-semibold">
+                                📋 Selection Mode Active - {selectedTasks.length} task{selectedTasks.length !== 1 ? 's' : ''} selected
+                            </p>
+                        </div>
+                    )}
                 </div>
 
                 {/* Statistics Panel */}
@@ -242,6 +347,9 @@ const Home = ({ darkMode, toggleDarkMode }) => {
                             onDelete={deleteTask}
                             onEdit={updateTask}
                             color="bg-gradient-to-r from-red-500 to-red-600"
+                            selectionMode={selectionMode}
+                            selectedTasks={selectedTasks}
+                            onToggleSelect={toggleTaskSelection}
                         />
                         <Column
                             columnId="inprogress"
@@ -250,6 +358,9 @@ const Home = ({ darkMode, toggleDarkMode }) => {
                             onDelete={deleteTask}
                             onEdit={updateTask}
                             color="bg-gradient-to-r from-yellow-500 to-yellow-600"
+                            selectionMode={selectionMode}
+                            selectedTasks={selectedTasks}
+                            onToggleSelect={toggleTaskSelection}
                         />
                         <Column
                             columnId="done"
@@ -258,6 +369,9 @@ const Home = ({ darkMode, toggleDarkMode }) => {
                             onDelete={deleteTask}
                             onEdit={updateTask}
                             color="bg-gradient-to-r from-green-500 to-green-600"
+                            selectionMode={selectionMode}
+                            selectedTasks={selectedTasks}
+                            onToggleSelect={toggleTaskSelection}
                         />
                     </div>
                 </DragDropContext>

@@ -9,7 +9,8 @@ import {
     where,
     onSnapshot,
     orderBy,
-    serverTimestamp
+    serverTimestamp,
+    writeBatch
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { useAuth } from './AuthContext';
@@ -83,12 +84,33 @@ export const TaskProvider = ({ children }) => {
         }
     };
 
-    // Delete Task
+    // Delete Task (Single)
     const deleteTask = async (taskId) => {
         try {
             await deleteDoc(doc(db, 'tasks', taskId));
         } catch (error) {
             console.error('Error deleting task:', error);
+            throw error;
+        }
+    };
+
+    // ✅ NEW: Bulk Delete Tasks
+    const bulkDeleteTasks = async (taskIds) => {
+        try {
+            // Firestore batch untuk delete multiple documents sekaligus
+            const batch = writeBatch(db);
+
+            taskIds.forEach((taskId) => {
+                const taskRef = doc(db, 'tasks', taskId);
+                batch.delete(taskRef);
+            });
+
+            // Execute batch delete
+            await batch.commit();
+
+            return { success: true, deletedCount: taskIds.length };
+        } catch (error) {
+            console.error('Error bulk deleting tasks:', error);
             throw error;
         }
     };
@@ -126,6 +148,7 @@ export const TaskProvider = ({ children }) => {
         addTask,
         updateTask,
         deleteTask,
+        bulkDeleteTasks,
         updateTaskStatus,
         getStatistics
     };

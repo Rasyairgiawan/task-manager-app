@@ -1,7 +1,7 @@
 import { Droppable, Draggable } from '@hello-pangea/dnd';
 import TaskCard from './TaskCard';
 
-const Column = ({ columnId, title, tasks, onDelete, onEdit, color }) => {
+const Column = ({ columnId, title, tasks, onDelete, onEdit, color, selectionMode, selectedTasks, onToggleSelect }) => {
     return (
         <div className="flex-1 min-w-[320px]">
             {/* Column Header */}
@@ -17,25 +17,30 @@ const Column = ({ columnId, title, tasks, onDelete, onEdit, color }) => {
             </div>
 
             {/* Droppable Area */}
-            <Droppable droppableId={columnId}>
+            <Droppable droppableId={columnId} isDropDisabled={selectionMode}>
                 {(provided, snapshot) => (
                     <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`min-h-[600px] p-4 rounded-xl transition-all duration-200 ${snapshot.isDraggingOver
+                        className={`min-h-[600px] p-4 rounded-xl transition-all duration-200 ${snapshot.isDraggingOver && !selectionMode
                                 ? 'bg-blue-100 dark:bg-blue-900 border-4 border-dashed border-blue-400 dark:border-blue-500 scale-105'
                                 : 'bg-gray-100 dark:bg-gray-800 border-2 border-transparent'
                             }`}
                     >
                         {/* Task Cards */}
                         {tasks.map((task, index) => (
-                            <Draggable key={task.id} draggableId={task.id} index={index}>
+                            <Draggable
+                                key={task.id}
+                                draggableId={task.id}
+                                index={index}
+                                isDragDisabled={selectionMode}
+                            >
                                 {(provided, snapshot) => (
                                     <div
                                         ref={provided.innerRef}
                                         {...provided.draggableProps}
                                         {...provided.dragHandleProps}
-                                        className={`${snapshot.isDragging
+                                        className={`${snapshot.isDragging && !selectionMode
                                                 ? 'opacity-70 rotate-3 scale-105 shadow-2xl'
                                                 : 'opacity-100'
                                             } transition-all duration-200`}
@@ -44,6 +49,9 @@ const Column = ({ columnId, title, tasks, onDelete, onEdit, color }) => {
                                             task={task}
                                             onDelete={onDelete}
                                             onEdit={onEdit}
+                                            selectionMode={selectionMode}
+                                            isSelected={selectedTasks?.includes(task.id)}
+                                            onToggleSelect={onToggleSelect}
                                         />
                                     </div>
                                 )}

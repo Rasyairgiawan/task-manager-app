@@ -1,7 +1,7 @@
 import { FaTrash, FaEdit, FaClock, FaCalendar, FaCheck, FaTimes } from 'react-icons/fa';
 import { useState } from 'react';
 
-const TaskCard = ({ task, onDelete, onEdit }) => {
+const TaskCard = ({ task, onDelete, onEdit, selectionMode, isSelected, onToggleSelect }) => {
     const [isEditing, setIsEditing] = useState(false);
     const [editTitle, setEditTitle] = useState(task.title);
     const [editDescription, setEditDescription] = useState(task.description);
@@ -47,6 +47,13 @@ const TaskCard = ({ task, onDelete, onEdit }) => {
     const isOverdue = () => {
         if (!task.deadline || task.status === 'done') return false;
         return new Date(task.deadline) < new Date();
+    };
+
+    // ✅ Handle Card Click in Selection Mode
+    const handleCardClick = () => {
+        if (selectionMode && !isEditing) {
+            onToggleSelect(task.id);
+        }
     };
 
     if (isEditing) {
@@ -114,32 +121,59 @@ const TaskCard = ({ task, onDelete, onEdit }) => {
     }
 
     return (
-        <div className="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-5 mb-4 hover:shadow-2xl transition-all cursor-move border-l-4 border-blue-500 dark:border-purple-500 group hover:scale-105 transform">
+        <div
+            className={`bg-white dark:bg-gray-700 rounded-xl shadow-lg p-5 mb-4 hover:shadow-2xl transition-all border-l-4 group ${selectionMode ? 'cursor-pointer' : 'cursor-move'
+                } ${isSelected
+                    ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-900 ring-2 ring-blue-500 scale-[0.98]'
+                    : 'border-blue-500 dark:border-purple-500 hover:scale-105'
+                }`}
+            onClick={handleCardClick}
+        >
             {/* Header */}
             <div className="flex justify-between items-start mb-3">
+                {/* ✅ Checkbox in Selection Mode */}
+                {selectionMode && (
+                    <div className="mr-3 flex-shrink-0">
+                        <div className={`w-6 h-6 flex items-center justify-center rounded border-2 transition-all ${isSelected
+                                ? 'bg-blue-500 border-blue-500'
+                                : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                            }`}>
+                            {isSelected && <FaCheck className="text-white text-xs" />}
+                        </div>
+                    </div>
+                )}
+
                 <h3 className="font-bold text-gray-800 dark:text-white text-lg flex-1 pr-2 leading-tight">
                     {task.title}
                 </h3>
-                <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                        onClick={() => setIsEditing(true)}
-                        className="text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 p-2 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition"
-                        title="Edit task"
-                    >
-                        <FaEdit className="text-lg" />
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (window.confirm('Are you sure you want to delete this task?')) {
-                                onDelete(task.id);
-                            }
-                        }}
-                        className="text-red-500 hover:text-red-600 dark:hover:text-red-400 p-2 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition"
-                        title="Delete task"
-                    >
-                        <FaTrash className="text-lg" />
-                    </button>
-                </div>
+
+                {/* Edit/Delete Buttons (Hidden in Selection Mode) */}
+                {!selectionMode && (
+                    <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsEditing(true);
+                            }}
+                            className="text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 p-2 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition"
+                            title="Edit task"
+                        >
+                            <FaEdit className="text-lg" />
+                        </button>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (window.confirm('Are you sure you want to delete this task?')) {
+                                    onDelete(task.id);
+                                }
+                            }}
+                            className="text-red-500 hover:text-red-600 dark:hover:text-red-400 p-2 hover:bg-red-50 dark:hover:bg-red-900 rounded-lg transition"
+                            title="Delete task"
+                        >
+                            <FaTrash className="text-lg" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Description */}
@@ -185,6 +219,15 @@ const TaskCard = ({ task, onDelete, onEdit }) => {
                     <p className="text-xs text-red-700 dark:text-red-200 font-semibold flex items-center">
                         <span className="mr-2">⚠️</span>
                         This task is overdue!
+                    </p>
+                </div>
+            )}
+
+            {/* ✅ Selection Indicator */}
+            {selectionMode && isSelected && (
+                <div className="mt-3 bg-blue-50 dark:bg-blue-900 border-l-4 border-blue-500 p-2 rounded">
+                    <p className="text-xs text-blue-700 dark:text-blue-200 font-semibold text-center">
+                        ✓ Selected for deletion
                     </p>
                 </div>
             )}
